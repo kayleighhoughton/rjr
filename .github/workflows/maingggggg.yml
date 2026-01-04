@@ -1,0 +1,75 @@
+name: Test Public Proxies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  test-proxies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (minimal, for Actions context)
+        uses: actions/checkout@v4
+
+      - name: Install sing-box
+        run: |
+          wget -qO- https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz | tar xz
+          sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
+          sudo chmod +x /usr/local/bin/sing-box
+
+      - name: Download proxy list and extract proxies
+        run: |
+          curl -L 'https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt' -o proxies.txt
+          grep -E '^(ss://|ssr://|trojan://|vless://|vmess://)' proxies.txt > all_proxies.txt
+
+      - name: Test each proxy with sing-box
+        run: |
+          cat << 'EOF' > test_proxy.sh
+          #!/bin/bash
+          url="$1"
+
+          if [[ $url == ssr://* ]]; then
+            echo "Skipping SSR proxy (not supported by sing-box): $url"
+            exit 0
+          fi
+
+          # Generate configuration using sing-box
+          CONFIG_FILE=$(mktemp)
+          /usr/local/bin/sing-box api generate config --url "$url" > "$CONFIG_FILE" 2>/dev/null
+
+          # Test connection to github.com:443 using generated config
+          /usr/local/bin/sing-box test -c "$CONFIG_FILE" -d github.com:443 --timeout 10
+          status=$?
+
+          rm -f "$CONFIG_FILE"
+
+          if [ $status -eq 0 ]; then
+            echo "[OK] $url"
+          else
+            echo "[FAILED] $url"
+          fi
+          exit $status
+          EOF
+          chmod +x test_proxy.sh
+
+          # Limit number of proxies per protocol (for demonstration, change as needed)
+          for proto in ss:// ssr:// trojan:// vless:// vmess://; do
+            grep "^$proto" all_proxies.txt | head -n 3 > ${proto//:}.txt
+          done
+
+          err_count=0
+
+          for proto in ss:// ssr:// trojan:// vless:// vmess://; do
+            while read -r url; do
+              echo "==== Testing $url ===="
+              ./test_proxy.sh "$url" || err_count=$((err_count+1))
+            done < ${proto//:}.txt
+          done
+
+          if [ $err_count -ne 0 ]; then
+            echo "Some proxies failed to connect."
+            exit 1
+          else
+            echo "All tested proxies successful or skipped."
+          fi
