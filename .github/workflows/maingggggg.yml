@@ -35,19 +35,68 @@ jobs:
           CONFIG_FILE="$TMPDIR/config.json"
           LOG_FILE="$TMPDIR/singbox.log"
 
-          # Handle ss://, trojan://, vless://, and vmess:// proxies
+          # Manually create outbound configuration based on proxy type
           if [[ $url == ss://* ]]; then
-            # Shadowsocks configuration
-            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type ss)
+            # Shadowsocks
+            METHOD=$(echo "$url" | sed -E 's/^ss:\/\/([^@]+)@([^:]+):([0-9]+)\?.*/\1/')
+            PASSWORD=$(echo "$url" | sed -E 's/^ss:\/\/([^@]+)@([^:]+):([0-9]+)\?.*/\2/')
+            OUTBOUND_JSON=$(cat <<EOF
+            {
+              "type": "shadowsocks",
+              "tag": "ss-in",
+              "method": "$METHOD",
+              "password": "$PASSWORD"
+            }
+            EOF
+            )
           elif [[ $url == trojan://* ]]; then
-            # Trojan configuration
-            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type trojan)
+            # Trojan
+            OUTBOUND_JSON=$(cat <<EOF
+            {
+              "type": "trojan",
+              "tag": "trojan-in",
+              "users": [{
+                "name": "sekai",
+                "password": "8JCsPssfgS8tiRwiMlhARg=="
+              }],
+              "tls": {},
+              "fallback": {
+                "server": "127.0.0.1",
+                "server_port": 8080
+              }
+            }
+            EOF
+            )
           elif [[ $url == vless://* ]]; then
-            # VLESS configuration
-            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type vless)
+            # VLESS
+            UUID=$(echo "$url" | sed -E 's/^vless:\/\/([^@]+)@([^:]+):([0-9]+)\?.*/\1/')
+            OUTBOUND_JSON=$(cat <<EOF
+            {
+              "type": "vless",
+              "tag": "vless-in",
+              "users": [{
+                "name": "$UUID",
+                "uuid": "$UUID"
+              }],
+              "tls": {}
+            }
+            EOF
+            )
           elif [[ $url == vmess://* ]]; then
-            # VMess configuration
-            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type vmess)
+            # VMess
+            UUID=$(echo "$url" | sed -E 's/^vmess:\/\/([^@]+)@([^:]+):([0-9]+)\?.*/\1/')
+            OUTBOUND_JSON=$(cat <<EOF
+            {
+              "type": "vmess",
+              "tag": "vmess-in",
+              "users": [{
+                "id": "$UUID",
+                "alterId": 64,
+                "security": "auto"
+              }]
+            }
+            EOF
+            )
           else
             echo "[FAILED] Unsupported proxy type: $url"
             exit 1
