@@ -306,6 +306,7 @@ if __name__ == "__main__":
             while '@brutalles' in peono.cdp.get_current_url():
                 if c == 5:
                     break
+                peono.cdp.scroll_into_view(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
                 peono.cdp.gui_click_element(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
                 peono.sleep(10)
                 c+=1
