@@ -11,14 +11,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install Xray (manual)
+    - name: Install sing-box
       run: |
-        mkdir xray
-        cd xray
-        curl -L -o xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-        unzip xray.zip
-        chmod +x xray
-        sudo mv xray /usr/local/bin/xray
+        curl -L -o singbox.tar.gz https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-1.8.0-linux-amd64.tar.gz
+        tar -xzf singbox.tar.gz
+        sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
+        sudo chmod +x /usr/local/bin/sing-box
 
     - name: Download proxy list
       run: |
@@ -31,15 +29,15 @@ jobs:
         echo "Random proxy:"
         cat random_proxy.txt
 
-    - name: Convert proxy to Xray config
+    - name: Convert proxy to sing-box config
       run: |
-        xray convert -f random_proxy.txt -o config.json
+        sing-box generate -u "$(cat random_proxy.txt)" > config.json
         echo "Generated config.json:"
         cat config.json
 
-    - name: Start Xray proxy
+    - name: Start sing-box proxy
       run: |
-        xray run -c config.json &
+        sing-box run -c config.json &
         sleep 5
 
     - name: Print IP through proxy
