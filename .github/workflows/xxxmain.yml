@@ -24,7 +24,7 @@ jobs:
 
       - name: Start opera-proxy
         run: |
-          nohup opera-proxy -l 127.0.0.1:18080 &
+          nohup opera-proxy -p 127.0.0.1:18080 &
           sleep 5
 
       - name: Configure proxy environment
