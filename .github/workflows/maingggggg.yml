@@ -54,16 +54,18 @@ jobs:
 
           # Limit number of proxies per protocol (change head -n 3 to test more)
           for proto in ss:// ssr:// trojan:// vless:// vmess://; do
-            grep "^$proto" all_proxies.txt | head -n 3 > ${proto//:}.txt
+            proto_short="${proto//[:\/]/}"
+            grep "^$proto" all_proxies.txt | head -n 3 > "$proto_short.txt"
           done
 
           err_count=0
 
-          for proto in ss:// ssr:// trojan:// vless:// vmess://; do
+          for proto in ss ssr trojan vless vmess; do
             while read -r url; do
+              [ -z "$url" ] && continue
               echo "==== Testing $url ===="
               ./test_proxy.sh "$url" || err_count=$((err_count+1))
-            done < ${proto//:}.txt
+            done < "$proto.txt"
           done
 
           if [ $err_count -ne 0 ]; then
