@@ -4,8 +4,8 @@ on:
   workflow_dispatch: 
 
 jobs:
-  run-proxy: 
-    runs-on: ubuntu-latest
+  run-proxy:
+    runs-on:  ubuntu-latest
 
     steps:
     - name:  Checkout
@@ -13,19 +13,19 @@ jobs:
 
     - name: Install sing-box
       run: |
-        set -e  # Exit on error
+        set -e
         VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
         echo "Latest version: $VERSION"
         
         curl -L --fail -o singbox. tar.gz \
-          "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION}-linux-amd64.tar. gz"
+          "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz"
         
         # Extract and find the binary
-        tar -tzf singbox.tar.gz  # List contents first to verify
+        tar -tzf singbox.tar.gz
         tar -xzf singbox.tar.gz
         
-        # Find the sing-box binary (works regardless of directory name)
-        SING_BOX=$(find .  -maxdepth 2 -name "sing-box" -type f 2>/dev/null | head -1)
+        # Find the sing-box binary
+        SING_BOX=$(find . -maxdepth 2 -name "sing-box" -type f 2>/dev/null | head -1)
         if [ -z "$SING_BOX" ]; then
           echo "Error: sing-box binary not found in archive"
           exit 1
@@ -33,12 +33,12 @@ jobs:
         
         sudo mv "$SING_BOX" /usr/local/bin/sing-box
         sudo chmod +x /usr/local/bin/sing-box
-        sing-box --version  # Verify installation
+        sing-box --version
 
     - name: Download proxy list
       run: |
         curl -L -o proxies.txt \
-        https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs. txt
+          https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs. txt
 
     - name: Extract random proxy
       run: |
@@ -55,15 +55,14 @@ jobs:
     - name: Start sing-box proxy
       run: |
         sing-box run -c config.json &
-        PROXY_PID=$!
+        PROXY_PID=$! 
         sleep 5
-        # Verify proxy is running
         if !  kill -0 $PROXY_PID 2>/dev/null; then
           echo "Error:  sing-box failed to start"
           exit 1
         fi
 
-    - name:  Print IP through proxy
+    - name: Print IP through proxy
       run: |
         echo "IP through proxy:"
         curl --socks5 127.0.0.1:1080 https://api.ipify.org || echo "Proxy connection failed"
