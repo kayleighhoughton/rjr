@@ -4,10 +4,10 @@ on:
   workflow_dispatch: 
 
 jobs:
-  run-proxy:
+  run-proxy: 
     runs-on:  ubuntu-latest
 
-    steps:
+    steps: 
     - name:  Checkout
       uses: actions/checkout@v4
 
@@ -15,19 +15,19 @@ jobs:
       run: |
         set -e
         VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep -oP '"tag_name"\s*:\s*"\K[^"]+')
-        echo "Latest version: $VERSION"
+        echo "Latest version:  $VERSION"
         
-        curl -L --fail -o singbox. tar.gz \
+        curl -L --fail -o singbox.tar.gz \
           "https://github.com/SagerNet/sing-box/releases/download/${VERSION}/sing-box-${VERSION}-linux-amd64.tar.gz"
         
         # Extract and find the binary
-        tar -tzf singbox.tar.gz
+        tar -tzf singbox. tar.gz
         tar -xzf singbox.tar.gz
         
         # Find the sing-box binary
         SING_BOX=$(find . -maxdepth 2 -name "sing-box" -type f 2>/dev/null | head -1)
         if [ -z "$SING_BOX" ]; then
-          echo "Error: sing-box binary not found in archive"
+          echo "Error:  sing-box binary not found in archive"
           exit 1
         fi
         
