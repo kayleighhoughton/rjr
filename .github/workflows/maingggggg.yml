@@ -14,8 +14,9 @@ jobs:
 
       - name: Install sing-box
         run: |
-          wget -qO- https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz | tar xz
-          sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
+          wget -O sing-box.tar.gz https://github.com/SagerNet/sing-box/releases/download/v1.12.14/sing-box-1.12.14-linux-amd64.tar.gz
+          tar xzf sing-box.tar.gz
+          sudo mv sing-box-1.12.14-linux-amd64/sing-box /usr/local/bin/sing-box
           sudo chmod +x /usr/local/bin/sing-box
 
       - name: Download proxy list and extract proxies
@@ -34,11 +35,9 @@ jobs:
             exit 0
           fi
 
-          # Generate configuration using sing-box
           CONFIG_FILE=$(mktemp)
           /usr/local/bin/sing-box api generate config --url "$url" > "$CONFIG_FILE" 2>/dev/null
 
-          # Test connection to github.com:443 using generated config
           /usr/local/bin/sing-box test -c "$CONFIG_FILE" -d github.com:443 --timeout 10
           status=$?
 
@@ -53,7 +52,7 @@ jobs:
           EOF
           chmod +x test_proxy.sh
 
-          # Limit number of proxies per protocol (for demonstration, change as needed)
+          # Limit number of proxies per protocol (change head -n 3 to test more)
           for proto in ss:// ssr:// trojan:// vless:// vmess://; do
             grep "^$proto" all_proxies.txt | head -n 3 > ${proto//:}.txt
           done
