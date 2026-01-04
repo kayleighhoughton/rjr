@@ -288,6 +288,7 @@ if __name__ == "__main__":
             peono.sleep(5)
             source = peono.get_page_source()
             #print(source)
+            '''
             bad_indicators = [ "REMOTE_ADDR", "REQUEST_METHOD", "REQUEST_URI", "HTTP_USER_AGENT", "HTTP_ACCEPT", "HTTP_HOST", ]
             if "<html" not in source:
                 continue
@@ -297,6 +298,7 @@ if __name__ == "__main__":
                 continue
             if "REMOTE_ADDR" in source:
                 continue
+            '''
             peono.sleep(30)
             if peono.is_element_present('button:contains("Accept")'):
                 peono.cdp.click('button:contains("Accept")', timeout=4)
