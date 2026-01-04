@@ -67,6 +67,8 @@ jobs:
         pip install --upgrade seleniumbase
         pip install --upgrade pyautogui
         pip install --upgrade pymongo
+        pip install --upgrade aiohttp
+        pip install --upgrade aiohttp-socks
         pip install --upgrade python-xlib
     - name: Install chromedriver
       run: |
