@@ -11,9 +11,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install Xray
+    - name: Install Xray (manual)
       run: |
-        bash <(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh) install
+        mkdir xray
+        cd xray
+        curl -L -o xray.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+        unzip xray.zip
+        chmod +x xray
+        sudo mv xray /usr/local/bin/xray
 
     - name: Download proxy list
       run: |
@@ -34,7 +39,7 @@ jobs:
 
     - name: Start Xray proxy
       run: |
-        sudo xray run -c config.json &
+        xray run -c config.json &
         sleep 5
 
     - name: Print IP through proxy
