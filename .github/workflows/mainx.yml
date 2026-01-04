@@ -13,7 +13,10 @@ jobs:
 
     - name: Install sing-box
       run: |
-        curl -L -o singbox.tar.gz https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-1.8.0-linux-amd64.tar.gz
+        VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep tag_name | cut -d '"' -f 4)
+        echo "Latest version: $VERSION"
+        curl -L -o singbox.tar.gz \
+          https://github.com/SagerNet/sing-box/releases/download/$VERSION/sing-box-$VERSION-linux-amd64.tar.gz
         tar -xzf singbox.tar.gz
         sudo mv sing-box-*/sing-box /usr/local/bin/sing-box
         sudo chmod +x /usr/local/bin/sing-box
