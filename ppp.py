@@ -305,7 +305,7 @@ if __name__ == "__main__":
                 #peono.cdp.gui_press_key('K')
             c = 0
             rndlink = random.randint(1,5)
-            sb.cdp.maximize()
+            peono.cdp.maximize()
             rndsleep = random.randint(60,600)
             while '@brutalles' in peono.cdp.get_current_url():
                 if c == 5:
