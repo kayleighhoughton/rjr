@@ -1,36 +1,36 @@
-name: Opera Proxy Test
+name: Test Opera Proxy
 
 on:
-  workflow_dispatch:   # run manually from GitHub UI
-  push:                # or trigger on push if you prefer
+  workflow_dispatch:
 
 jobs:
-  test-opera-proxy:
+  run-opera-proxy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Install opera-proxy
+      - name: Download opera-proxy
         run: |
-          go install github.com/Snawoot/opera-proxy@latest
-          echo "$HOME/go/bin" >> $GITHUB_PATH
+          wget https://github.com/Snawoot/opera-proxy/releases/download/v1.13.1/opera-proxy.linux-amd64 -O opera-proxy
+          chmod +x opera-proxy
 
-      - name: Start opera-proxy
+      - name: List available countries
         run: |
-          nohup opera-proxy -p 127.0.0.1:18080 &
+          ./opera-proxy -list-countries
+
+      - name: Start opera-proxy in background
+        run: |
+          nohup ./opera-proxy -country EU > opera.log 2>&1 &
           sleep 5
+          echo "Proxy started"
 
-      - name: Configure proxy environment
+      - name: Show opera-proxy logs
         run: |
-          echo "HTTP_PROXY=http://127.0.0.1:18080" >> $GITHUB_ENV
-          echo "HTTPS_PROXY=http://127.0.0.1:18080" >> $GITHUB_ENV
+          cat opera.log
 
-      - name: Test request through Opera VPN
-        run: curl -s https://ifconfig.me
+      - name: Test proxy with curl
+        run: |
+          echo "Testing proxy..."
+          curl --proxy http://127.0.0.1:18080 https://api.ipify.org?format=json
