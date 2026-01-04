@@ -29,7 +29,7 @@ jobs:
           cat << 'EOF' > test_proxy.sh
           #!/bin/bash
           url="$1"
-          port=$((RANDOM%1000+10080)) # random port to avoid conflict
+          port=$((RANDOM%1000+10080)) # random port
 
           if [[ $url == ssr://* ]]; then
             echo "Skipping SSR proxy (not supported by sing-box): $url"
@@ -40,75 +40,63 @@ jobs:
           CONFIG_FILE="$TMPDIR/config.json"
           LOG_FILE="$TMPDIR/singbox.log"
 
-          # Write sing-box config (single outbound + local socks inbound)
-          cat > "$CONFIG_FILE" << EOL
+          # Try single-outbound configs for ss trojan vless vmess
+          cat > "$CONFIG_FILE" <<CONFIG
           {
-            "log": { "level": "warn", "output": null },
-            "inbounds": [
-              {
-                "type": "socks",
-                "tag": "socks-in",
-                "listen": "127.0.0.1",
-                "listen_port": $port
-              }
-            ],
+            "log": {"level": "warn", "output": "$LOG_FILE"},
+            "inbounds": [{
+              "type": "socks",
+              "tag": "socks-in",
+              "listen": "127.0.0.1",
+              "listen_port": $port
+            }],
             "outbounds": [
               {
-                "type": "urltest",
-                "tag": "auto-out",
-                "outbounds": [
-                  {
-                    "type": "auto",
-                    "tag": "auto",
-                    "outbounds": [
-                      {
-                        "type": "selector",
-                        "tag": "selector",
-                        "outbounds": [
-                          {
-                            "type": "url",
-                            "tag": "proxy",
-                            "url": "$url"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
+                "type": "url",
+                "tag": "proxy",
+                "url": "$url"
               }
             ],
             "route": {
-              "rules": [
-                {
-                  "type": "field",
-                  "inbound_tag": ["socks-in"],
-                  "outbound_tag": "auto-out"
-                }
-              ]
+              "rules": [{
+                "type": "field",
+                "inbound_tag": ["socks-in"],
+                "outbound_tag": "proxy"
+              }]
             }
           }
-          EOL
+          CONFIG
 
-          # Launch sing-box in background
-          /usr/local/bin/sing-box run -c "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
+          # Start sing-box (background)
+          /usr/local/bin/sing-box run -c "$CONFIG_FILE" &
           PID=$!
 
-          # Wait a bit for sing-box to start
-          sleep 2
+          # Wait for sing-box to (try to) bind the SOCKS port
+          for i in {1..10}; do
+            if nc -z 127.0.0.1 $port; then
+                break
+            fi
+            sleep 1
+          done
 
-          # Try to connect to github.com through the proxy
-          curl --socks5-hostname 127.0.0.1:$port --max-time 10 https://github.com/ -I > /dev/null 2>&1
-          EXITCODE=$?
+          # Try to connect to github.com through the proxy (10 second max)
+          curl --socks5-hostname 127.0.0.1:$port --max-time 10 https://github.com/ -I >/dev/null 2>&1
+          CURL_STATUS=$?
 
-          kill $PID
-          rm -rf "$TMPDIR"
+          # Stop sing-box cleanly if still running
+          if kill -0 $PID 2>/dev/null; then kill $PID; fi
+          wait $PID 2>/dev/null
 
-          if [ "$EXITCODE" -eq 0 ]; then
+          if [ $CURL_STATUS -eq 0 ]; then
             echo "[OK] $url"
+            rm -rf "$TMPDIR"
             exit 0
           else
             echo "[FAILED] $url"
-            cat "$LOG_FILE"
+            if [ -f "$LOG_FILE" ]; then
+              cat "$LOG_FILE"
+            fi
+            rm -rf "$TMPDIR"
             exit 1
           fi
           EOF
