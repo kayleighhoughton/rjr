@@ -11,14 +11,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install sing-box + subscribe tool
+    - name: Install sing-box 1.6.0
       run: |
         curl -L -o singbox.tar.gz \
-          https://github.com/SagerNet/sing-box/releases/download/v1.12.14/sing-box-1.12.14-linux-amd64.tar.gz
+          https://github.com/SagerNet/sing-box/releases/download/v1.6.0/sing-box-1.6.0-linux-amd64.tar.gz
         tar -xzf singbox.tar.gz
-        sudo mv sing-box-1.12.14-linux-amd64/sing-box /usr/local/bin/sing-box
-        sudo mv sing-box-1.12.14-linux-amd64/sing-box-subscribe /usr/local/bin/sing-box-subscribe
-        sudo chmod +x /usr/local/bin/sing-box /usr/local/bin/sing-box-subscribe
+        sudo mv sing-box-1.6.0-linux-amd64/sing-box /usr/local/bin/sing-box
+        sudo chmod +x /usr/local/bin/sing-box
 
     - name: Download proxy list
       run: |
@@ -31,9 +30,9 @@ jobs:
         echo "Random proxy:"
         cat random_proxy.txt
 
-    - name: Convert proxy using sing-box-subscribe
+    - name: Convert proxy to sing-box config
       run: |
-        sing-box-subscribe url "$(cat random_proxy.txt)" > config.json
+        sing-box generate -u "$(cat random_proxy.txt)" > config.json
         echo "Generated config.json:"
         cat config.json
 
