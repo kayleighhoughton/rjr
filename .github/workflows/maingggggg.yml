@@ -31,23 +31,35 @@ jobs:
           url="$1"
           port=$((RANDOM%1000+10080))
 
-          if [[ $url == ssr://* ]]; then
-            echo "Skipping SSR proxy (not supported by sing-box): $url"
-            exit 0
-          fi
-
           TMPDIR=$(mktemp -d)
           CONFIG_FILE="$TMPDIR/config.json"
           LOG_FILE="$TMPDIR/singbox.log"
 
-          # Use sing-box built-in converter to get correct outbound config JSON
-          OUTBOUND_JSON="$(/usr/local/bin/sing-box api convert --target json "$url" 2>/dev/null)"
+          # Handle ss://, trojan://, vless://, and vmess:// proxies
+          if [[ $url == ss://* ]]; then
+            # Shadowsocks configuration
+            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type ss)
+          elif [[ $url == trojan://* ]]; then
+            # Trojan configuration
+            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type trojan)
+          elif [[ $url == vless://* ]]; then
+            # VLESS configuration
+            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type vless)
+          elif [[ $url == vmess://* ]]; then
+            # VMess configuration
+            OUTBOUND_JSON=$(echo "$url" | /usr/local/bin/sing-box api convert --target json --type vmess)
+          else
+            echo "[FAILED] Unsupported proxy type: $url"
+            exit 1
+          fi
+
           if [ -z "$OUTBOUND_JSON" ]; then
             echo "[FAILED] Unable to convert URL to outbound: $url"
             rm -rf "$TMPDIR"
             exit 1
           fi
 
+          # Create config file for sing-box
           cat > "$CONFIG_FILE" <<CONFIG
           {
             "log": {"level": "warn", "output": null},
@@ -71,6 +83,7 @@ jobs:
           CONFIG
 
           /usr/local/bin/sing-box run -c "$CONFIG_FILE" > "$LOG_FILE" 2>&1 &
+
           PID=$!
 
           # Wait up to 10 seconds for SOCKS to be up
@@ -95,14 +108,11 @@ jobs:
           EOF
           chmod +x test_proxy.sh
 
-          for proto in ss:// ssr:// trojan:// vless:// vmess://; do
-            proto_short="${proto//[:\/]/}"
-            grep "^$proto" all_proxies.txt | head -n 2 > "$proto_short.txt"
-          done
-
           err_count=0
 
-          for proto in ss ssr trojan vless vmess; do
+          # Process each proxy type
+          for proto in ss trojan vless vmess; do
+            grep "^$proto" all_proxies.txt | head -n 2 > "$proto.txt"
             while read -r url; do
               [ -z "$url" ] && continue
               echo "==== Testing $url ===="
