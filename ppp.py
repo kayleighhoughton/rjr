@@ -294,6 +294,8 @@ if __name__ == "__main__":
                 continue
             if "ERR_SOCKS_CONNECTION_FAILED" in source:
                 continue
+            if "REMOTE_ADDR" in source:
+                continue
             peono.sleep(30)
             if peono.is_element_present('button:contains("Accept")'):
                 peono.cdp.click('button:contains("Accept")', timeout=4)
