@@ -306,14 +306,19 @@ if __name__ == "__main__":
             c = 0
             rndlink = random.randint(1,5)
             sb.cdp.maximize()
+            rndsleep = random.randint(60,600)
             while '@brutalles' in peono.cdp.get_current_url():
                 if c == 5:
                     break
-                peono.cdp.scroll_into_view(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
-                peono.cdp.gui_click_element(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
+                try:
+                    peono.cdp.scroll_into_view(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
+                    peono.cdp.gui_click_element(f'#items > ytd-grid-video-renderer:nth-child({rndlink})')
+                except:
+                    rndsleep = random.randint(6,10)
+                    break
                 peono.sleep(10)
                 c+=1
-            rndsleep = random.randint(60,600)
+            
             peono.sleep(rndsleep)
             k+=1
             
