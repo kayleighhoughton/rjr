@@ -282,8 +282,8 @@ if __name__ == "__main__":
     if True:
         with SB(uc=True, locale="en",ad_block=True,chromium_arg='--disable-webgl',proxy = p) as peono:
             rnd = random.randint(4,9)
-            if (k == 1):
-                break
+            #if (k == 1):
+                #break
             peono.activate_cdp_mode(urlt)
             peono.sleep(5)
             source = peono.get_page_source()
