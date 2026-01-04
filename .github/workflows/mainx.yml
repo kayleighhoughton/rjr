@@ -1,0 +1,43 @@
+name: Random Proxy Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-proxy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install Xray
+      run: |
+        bash <(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh) install
+
+    - name: Download proxy list
+      run: |
+        curl -L -o proxies.txt \
+        https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/all_extracted_configs.txt
+
+    - name: Extract random proxy
+      run: |
+        grep -Eo '(vmess|vless|ss|trojan|hy2)://[^ ]+' proxies.txt | shuf -n 1 > random_proxy.txt
+        echo "Random proxy:"
+        cat random_proxy.txt
+
+    - name: Convert proxy to Xray config
+      run: |
+        xray convert -f random_proxy.txt -o config.json
+        echo "Generated config.json:"
+        cat config.json
+
+    - name: Start Xray proxy
+      run: |
+        sudo xray run -c config.json &
+        sleep 5
+
+    - name: Print IP through proxy
+      run: |
+        echo "IP through proxy:"
+        curl --socks5 127.0.0.1:1080 https://api.ipify.org
