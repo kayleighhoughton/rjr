@@ -1,4 +1,4 @@
-name: Random Proxy Test (Xray)
+name: Random Proxy Test (V2Ray)
 
 on:
   workflow_dispatch:
@@ -8,12 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Install Xray
+    - name: Install V2Ray
       run: |
-        sudo bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+        sudo bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
 
     - name: Download proxy list
       run: |
@@ -26,15 +23,15 @@ jobs:
         echo "Random proxy:"
         cat random_proxy.txt
 
-    - name: Convert proxy to Xray config
+    - name: Convert proxy to V2Ray config
       run: |
-        xray url --url "$(cat random_proxy.txt)" > config.json
+        v2ray convert -f random_proxy.txt -o config.json
         echo "Generated config.json:"
         cat config.json
 
-    - name: Start Xray proxy
+    - name: Start V2Ray proxy
       run: |
-        sudo xray run -c config.json &
+        sudo v2ray run -c config.json &
         sleep 5
 
     - name: Print IP through proxy
