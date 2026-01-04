@@ -280,7 +280,7 @@ if __name__ == "__main__":
     p = "http://127.0.0.1:18080"
     k = 0
     if True:
-        with SB(uc=True, locale="en",ad_block=True,chromium_arg='--disable-webgl',proxy = p) as peono:
+        with SB(uc=True, locale="en",ad_block=True,chromium_arg='--disable-webgl') as peono:
             rnd = random.randint(4,9)
             #if (k == 1):
                 #break
