@@ -22,7 +22,7 @@ jobs:
 
       - name: Start opera-proxy in background
         run: |
-          nohup ./opera-proxy -country EU > opera.log 2>&1 &
+          nohup ./opera-proxy -country US > opera.log 2>&1 &
           sleep 5
           echo "Proxy started"
 
