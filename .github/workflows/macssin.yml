@@ -32,7 +32,7 @@ jobs:
 
     - name: Convert proxy to sing-box config
       run: |
-        sing-box generate -u "$(cat random_proxy.txt)" > config.json
+        sing-box generate config --url "$(cat random_proxy.txt)" > config.json
         echo "Generated config.json:"
         cat config.json
 
