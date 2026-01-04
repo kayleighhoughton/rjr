@@ -1,4 +1,4 @@
-name: Random Proxy Test
+name: Random Proxy Test (Xray)
 
 on:
   workflow_dispatch:
@@ -11,13 +11,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Install sing-box 1.6.0
+    - name: Install Xray
       run: |
-        curl -L -o singbox.tar.gz \
-          https://github.com/SagerNet/sing-box/releases/download/v1.6.0/sing-box-1.6.0-linux-amd64.tar.gz
-        tar -xzf singbox.tar.gz
-        sudo mv sing-box-1.6.0-linux-amd64/sing-box /usr/local/bin/sing-box
-        sudo chmod +x /usr/local/bin/sing-box
+        sudo bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
     - name: Download proxy list
       run: |
@@ -26,19 +22,19 @@ jobs:
 
     - name: Extract random proxy
       run: |
-        grep -Eo '(vmess|vless|ss|trojan|hy2)://[^ ]+' proxies.txt | shuf -n 1 > random_proxy.txt
+        grep -Eo '(vmess|vless|ss|trojan)://[^ ]+' proxies.txt | shuf -n 1 > random_proxy.txt
         echo "Random proxy:"
         cat random_proxy.txt
 
-    - name: Convert proxy to sing-box config
+    - name: Convert proxy to Xray config
       run: |
-        sing-box generate -u "$(cat random_proxy.txt)" > config.json
+        xray url --url "$(cat random_proxy.txt)" > config.json
         echo "Generated config.json:"
         cat config.json
 
-    - name: Start sing-box proxy
+    - name: Start Xray proxy
       run: |
-        sing-box run -c config.json &
+        sudo xray run -c config.json &
         sleep 5
 
     - name: Print IP through proxy
