@@ -273,12 +273,13 @@ urlt = f"https://www.twitch.tv/{fulln}"
 urlt = f"https://www.youtube.com/@{fulln}"
 if __name__ == "__main__":
     # You already have load_proxies() from earlier
-    proxies = load_proxies()
-    ppp = asyncio.run(run_balanced_test(proxies))
-    print(ppp)
-    random.shuffle(ppp)
+    #proxies = load_proxies()
+    #ppp = asyncio.run(run_balanced_test(proxies))
+    #print(ppp)
+    #random.shuffle(ppp)
+    p = "http://127.0.0.1:18080"
     k = 0
-    for p in ppp:
+    if True:
         with SB(uc=True, locale="en",ad_block=True,chromium_arg='--disable-webgl',proxy = p) as peono:
             rnd = random.randint(4,9)
             if (k == 1):
