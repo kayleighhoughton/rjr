@@ -1,0 +1,77 @@
+name: Test Opera Proxy
+
+on:
+  schedule:
+    - cron: "*/8 * * * *"
+  workflow_dispatch:
+    branches:
+jobs:
+  run-opera-proxy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set Locale
+        run: |
+          sudo apt-get install tzdata locales -y && sudo locale-gen en_US.UTF-8
+          sudo localectl set-locale LANG="en_US.UTF-8"
+          export LANG="en_US.UTF-8"
+          sudo update-locale
+          locale -a
+          locale
+          locale -c -k LC_NUMERIC
+          localectl status
+      - name: Download opera-proxy
+        run: |
+          wget https://github.com/Snawoot/opera-proxy/releases/download/v1.13.1/opera-proxy.linux-amd64 -O opera-proxy
+          chmod +x opera-proxy
+
+      - name: List available countries
+        run: |
+          ./opera-proxy -list-countries
+
+      - name: Start opera-proxy in background
+        run: |
+          nohup ./opera-proxy -country AM > opera.log 2>&1 &
+          sleep 5
+          echo "Proxy started"
+
+      - name: Show opera-proxy logs
+        run: |
+          cat opera.log
+
+      - name: Install Brave Browser
+        run: |
+          echo "Installing Brave Browser..."
+          sudo apt install apt-transport-https curl -y
+          curl -fsSL https://brave-browser-apt-release.s3.brave.com/brave-core.asc | sudo tee /etc/apt/trusted.gpg.d/brave.asc
+          echo "deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+          sudo apt update
+          sudo apt-get install python3-tk python3-dev
+          sudo apt install brave-browser -y
+        shell: bash
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade pip
+          pip install --upgrade wheel
+          pip install --upgrade seleniumbase
+          pip install --upgrade pyautogui
+          pip install --upgrade pymongo
+          pip install --upgrade aiohttp
+          pip install --upgrade aiohttp-socks
+          pip install --upgrade python-xlib
+      - name: Install chromedriver
+        run: |
+          seleniumbase install chromedriver
+      - name: Run python ppp.py --debug
+        run: |
+          python rjr.py --brave --incognito --do-not-track --xvfb --screenshot --proxy=127.0.0.1:18080
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: seleniumbase-screenshots
+          path: |
+            ./latest_logs/
+
