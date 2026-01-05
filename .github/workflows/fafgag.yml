@@ -43,10 +43,6 @@ jobs:
         run: |
           cat opera.log
 
-      - name: Test proxy with curl
-        run: |
-          echo "Testing proxy..."
-          curl --proxy http://127.0.0.1:8080 https://api.ipify.org?format=json
       - name: Install Brave Browser
         run: |
           echo "Installing Brave Browser..."
